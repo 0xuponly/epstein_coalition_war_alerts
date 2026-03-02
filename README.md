@@ -21,8 +21,10 @@ Forwards Telegram messages from **channels only** (ignores chats and groups) whe
    # OR export directly:
    export TELEGRAM_API_ID=12345678
    export TELEGRAM_API_HASH=your_api_hash
-   export TELEGRAM_FORWARD_TO=@your_username  # or chat ID / invite link
-   export TELEGRAM_KEYWORDS=dubai,uae,u.a.e.,abu dhabi,sharjah,united arab emirates
+   export TELEGRAM_FORWARD_TO_1=@channel1
+   export TELEGRAM_KEYWORDS_1=dubai,uae,u.a.e.,abu dhabi,sharjah
+   export TELEGRAM_FORWARD_TO_2=@channel2
+   export TELEGRAM_KEYWORDS_2=alert,urgent
    ```
 
 ## Run
@@ -39,13 +41,18 @@ On first run you’ll be asked for your phone number and the login code sent to 
 |----------|----------|-------------|
 | `TELEGRAM_API_ID` | Yes | From my.telegram.org |
 | `TELEGRAM_API_HASH` | Yes | From my.telegram.org |
-| `TELEGRAM_FORWARD_TO` | Yes | Username (`@user`), chat ID, or invite link |
-| `TELEGRAM_KEYWORDS` | Yes | Comma-separated keywords (word-boundary match) |
+| `TELEGRAM_FORWARD_TO_1` | Yes* | Channel 1 destination (username, chat ID, or invite link) |
+| `TELEGRAM_KEYWORDS_1` | Yes* | Channel 1 keywords (comma-separated, word-boundary match) |
+| `TELEGRAM_FORWARD_TO_2` | No | Channel 2 destination |
+| `TELEGRAM_KEYWORDS_2` | No | Channel 2 keywords |
 | `TELEGRAM_SESSION` | No | Session file name (default: `dubai_alerts_session`) |
 | `TELEGRAM_CASE_INSENSITIVE` | No | `true` or `false` (default: `true`) |
+
+*Channel 1 can also use legacy `TELEGRAM_FORWARD_TO` + `TELEGRAM_KEYWORDS`.
 
 ## Notes
 
 - Only **broadcast channels** are processed; groups and private chats are ignored.
 - You must be a member of the channels you want to monitor.
 - Keywords use word boundaries (e.g. `dubai` does not match `dubaiairport`).
+- A message matching multiple channel keyword sets is forwarded to each matching channel.

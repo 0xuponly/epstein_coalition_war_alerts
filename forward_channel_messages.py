@@ -9,6 +9,7 @@ Requires user account credentials (API ID, API Hash from my.telegram.org).
 import asyncio
 import os
 import re
+from typing import List, Tuple
 
 try:
     from dotenv import load_dotenv
@@ -23,23 +24,42 @@ from telethon.tl.types import Channel
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 API_ID = int(os.environ.get("TELEGRAM_API_ID", "0"))
 API_HASH = os.environ.get("TELEGRAM_API_HASH", "")
-SESSION_NAME = os.environ.get("TELEGRAM_SESSION", "dubai_alerts_session")
+SESSION_NAME = os.environ.get("TELEGRAM_SESSION", "epstein_coalition_alerts_session")
 SESSION_PATH = os.path.join(SCRIPT_DIR, SESSION_NAME)
-FORWARD_TO = os.environ.get("TELEGRAM_FORWARD_TO", "")  # Username, ID, or invite link
-KEYWORDS = os.environ.get("TELEGRAM_KEYWORDS", "dubai,alert,urgent").lower().split(",")
-KEYWORDS = [k.strip() for k in KEYWORDS if k.strip()]
+
+# Output channels: list of (destination, keywords_list)
+# Channel 1: FORWARD_TO_1 + KEYWORDS_1, or legacy FORWARD_TO + KEYWORDS
+# Channel 2: FORWARD_TO_2 + KEYWORDS_2
+def _parse_keywords(s: str) -> List[str]:
+    return [k.strip() for k in (s or "").lower().split(",") if k.strip()]
+
+
+def _get_output_channels() -> List[Tuple[str, List[str]]]:
+    channels = []
+    # Channel 1
+    dest1 = os.environ.get("TELEGRAM_FORWARD_TO_1")
+    kw1 = _parse_keywords(
+        os.environ.get("TELEGRAM_KEYWORDS_1") 
+    )
+    if dest1 and kw1:
+        channels.append((dest1, kw1))
+    # Channel 2
+    dest2 = os.environ.get("TELEGRAM_FORWARD_TO_2")
+    kw2 = _parse_keywords(os.environ.get("TELEGRAM_KEYWORDS_2", ""))
+    if dest2 and kw2:
+        channels.append((dest2, kw2))
+    return channels
 
 # Set to True for case-insensitive matching
 KEYWORDS_CASE_INSENSITIVE = os.environ.get("TELEGRAM_CASE_INSENSITIVE", "true").lower() == "true"
 
 
-def message_contains_keywords(text: str) -> bool:
-    """Check if message text contains any of the configured keywords."""
-    if not text:
+def message_contains_keywords(text: str, keywords: List[str]) -> bool:
+    """Check if message text contains any of the given keywords."""
+    if not text or not keywords:
         return False
     search_text = text.lower() if KEYWORDS_CASE_INSENSITIVE else text
-    for keyword in KEYWORDS:
-        # Word boundary match to avoid partial matches (e.g. "dubai" not matching "dubaiairport")
+    for keyword in keywords:
         pattern = rf"\b{re.escape(keyword.strip())}\b"
         if re.search(pattern, search_text, re.IGNORECASE if KEYWORDS_CASE_INSENSITIVE else 0):
             return True
@@ -52,11 +72,11 @@ async def main():
         print("Error: Set TELEGRAM_API_ID and TELEGRAM_API_HASH environment variables.", flush=True)
         print("Get them from https://my.telegram.org", flush=True)
         return
-    if not FORWARD_TO:
-        print("Error: Set TELEGRAM_FORWARD_TO (username, ID, or invite link of destination).", flush=True)
-        return
-    if not KEYWORDS:
-        print("Error: Set TELEGRAM_KEYWORDS (comma-separated list of words to match).", flush=True)
+
+    output_channels = _get_output_channels()
+    if not output_channels:
+        print("Error: Configure at least one output. Set TELEGRAM_FORWARD_TO + TELEGRAM_KEYWORDS "
+              "(or TELEGRAM_FORWARD_TO_1 + TELEGRAM_KEYWORDS_1).", flush=True)
         return
 
     client = TelegramClient(SESSION_PATH, API_ID, API_HASH)
@@ -73,18 +93,18 @@ async def main():
             return
 
         text = event.text or ""
-        if not message_contains_keywords(text):
-            return
-
-        try:
-            await event.forward_to(FORWARD_TO)
-            print(f"Forwarded from {chat.title}: {text[:80]}...", flush=True)
-        except Exception as e:
-            print(f"Failed to forward: {e}", flush=True)
+        for dest, keywords in output_channels:
+            if not message_contains_keywords(text, keywords):
+                continue
+            try:
+                await event.forward_to(dest)
+                print(f"Forwarded to {dest} from {chat.title}: {text[:80]}...", flush=True)
+            except Exception as e:
+                print(f"Failed to forward to {dest}: {e}", flush=True)
 
     await client.start()
-    print(f"Listening for channel messages containing: {KEYWORDS}", flush=True)
-    print(f"Forwarding to: {FORWARD_TO}", flush=True)
+    for i, (dest, kw) in enumerate(output_channels, 1):
+        print(f"Channel {i}: forwarding to {dest} (keywords: {kw})", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     await client.run_until_disconnected()
 
