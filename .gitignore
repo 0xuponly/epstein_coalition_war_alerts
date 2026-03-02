@@ -1,0 +1,14 @@
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+config.json
+*.session
+*.session-journal
+
+# Logs (may contain forwarded message content)
+*.log
+
+# Virtual environment
+.venv/
+venv/
