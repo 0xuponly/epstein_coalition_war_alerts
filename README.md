@@ -1,4 +1,4 @@
-# Dubai War Alerts by slumcap – Telegram Channel Forwarder
+# UAE/Qatar War Alerts by slumcap – Telegram Channel Forwarder
 
 Forwards Telegram messages from **channels only** (ignores chats and groups) when they contain certain keywords.
 
@@ -22,7 +22,7 @@ Forwards Telegram messages from **channels only** (ignores chats and groups) whe
    export TELEGRAM_API_ID=12345678
    export TELEGRAM_API_HASH=your_api_hash
    export TELEGRAM_FORWARD_TO=@your_username  # or chat ID / invite link
-   export TELEGRAM_KEYWORDS=dubai,alert,urgent
+   export TELEGRAM_KEYWORDS=dubai,uae,u.a.e.,abu dhabi,sharjah,united arab emirates
    ```
 
 ## Run
