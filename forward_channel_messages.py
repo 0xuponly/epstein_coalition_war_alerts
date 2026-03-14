@@ -118,6 +118,13 @@ filter_log = _setup_filtered_logger()
 CLIP = 4000
 
 
+def _condense_text(s: str) -> str:
+    """Drop blank lines so logged/stored bodies are compact."""
+    if not s:
+        return ""
+    return "\n".join(ln.strip() for ln in s.splitlines() if ln.strip())
+
+
 def _log_filtered(
     reason: str,
     dest: str,
@@ -131,8 +138,8 @@ def _log_filtered(
         reason,
         dest,
         source_chat,
-        (filtered_body or "")[:CLIP],
-        (matched_body or "")[:CLIP],
+        _condense_text(filtered_body or "")[:CLIP],
+        _condense_text(matched_body or "")[:CLIP],
         "-" * 60,
     )
 
@@ -247,11 +254,12 @@ def ui_sounds_enabled() -> bool:
 
 def _append_forward_jsonl(dest: str, source: str, text: str) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    condensed = _condense_text(text or "")[:8000]
     rec = {
         "ts": datetime.now(timezone.utc).isoformat(),
         "dest": dest,
         "source": source or "",
-        "text": (text or "")[:8000],
+        "text": condensed,
     }
     line = json.dumps(rec, ensure_ascii=False) + "\n"
     with _forward_jsonl_lock:
@@ -433,7 +441,8 @@ async def main() -> int:
             _content_forwarded_order.append(content_key)
             _exact_forwarded_sample[content_key] = (text or norm_exact)[:CLIP]
             _recent_text_by_dest[dest].append((norm_similar, (text or norm_exact)[:CLIP]))
-            log.info("Forwarded to %s from %s: %s...", dest, chat.title, (text or "")[:80])
+            preview = _condense_text(text or "")[:80]
+            log.info("Forwarded to %s from %s: %s...", dest, chat.title, preview)
             _append_forward_jsonl(dest, getattr(chat, "title", None) or str(event.chat_id), text)
             play_snd, name_snd = sound_settings[ch_idx]
             if play_snd:

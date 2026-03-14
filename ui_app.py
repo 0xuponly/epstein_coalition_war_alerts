@@ -58,7 +58,7 @@ def _destinations():
         d = os.environ.get(f"TELEGRAM_FORWARD_TO_{i}")
         k = os.environ.get(f"TELEGRAM_KEYWORDS_{i}", "").strip()
         if d and k:
-            out.append({"id": d, "label": f"Channel {i}: {d}"})
+            out.append({"id": d, "label": f"{d}"})
     return out
 
 
@@ -111,7 +111,7 @@ def index():
 <body>
   <h1>Forwarded messages</h1>
   <div class="bar" id="bar">
-    <span class="sound-master"><label><input type="checkbox" id="soundsOn"/> Sounds on (forwarder)</label></span>
+    <span class="sound-master"><label><input type="checkbox" id="soundsOn"/> Sounds</label></span>
     <span id="destToggles"></span>
     <button type="button" id="refresh" style="margin-left:auto;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;">Refresh</button>
   </div>
