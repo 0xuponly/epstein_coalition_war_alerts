@@ -12,6 +12,16 @@ Uses [Telethon](https://docs.telethon.dev/) (user session, not the Bot API).
 - A **Telegram user account**
 - **API ID & API Hash** from [my.telegram.org](https://my.telegram.org) → API development tools
 
+### Windows portable copy (`dist_windows/`)
+
+To run on a Windows machine without cloning the full repo, use the self-contained **`dist_windows/`** folder (same idea as `tg_mantracker/dist_windows`): copy the folder, install Python, double-click **`START.bat`** or run `python windows_launcher.py`. See **`dist_windows/README.md`**.
+
+To refresh packaged scripts from this repo after editing `forward_channel_messages.py` / `ui_app.py`:
+
+```bash
+./scripts/sync_dist_windows.sh
+```
+
 ---
 
 ## Setup
